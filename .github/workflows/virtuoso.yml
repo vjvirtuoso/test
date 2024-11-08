@@ -10,8 +10,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Run shell script
-        run: ./execute.sh
+        run: ./execute.sh --app2 -t ac545fe3-0a54-4efa-9d9c-75afb29bfb88 --goal_id 9414

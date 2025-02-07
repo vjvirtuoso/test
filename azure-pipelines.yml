@@ -1,0 +1,47 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+# Install the required python libraries
+steps:
+- script: pip install -r requirements.txt
+  displayName: 'Install requirements'
+
+
+# Run the Robot framework Tests
+- script: robot --rpa -d results -x execution-report.xml Test/virtuoso.robot
+  displayName: 'Run Virtuoso Test'
+  env:
+    VIRTUOSO_TOKEN: $(VIRTUOSO_TOKEN)
+    
+
+# Updates the Test Cases and Test Runs and link to test cases
+- script: python Utils/azureDevOps.py results/execution-report.xml
+  displayName: 'Publish Test Results'
+  env:
+    PROJECT_NAME: $(PROJECT_NAME)
+    ORGANIZATION_URL: $(ORGANIZATION_URL)
+    PERSONAL_ACCESS_TOKEN: $(PERSONAL_ACCESS_TOKEN)
+    PLAN_ID: $(PLAN_ID)
+    SUITE_ID: $(SUITE_ID)
+
+# Optional Step to add run to Test Run (NOTE: It does not link the executions)
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'results'
+    ArtifactName: 'results'
+    publishLocation: 'Container'
+
+#Optional Task to publish JUNIT results
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/results/execution-report.xml'
